@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+	xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd"
+	id="WebApp_ID" version="3.1">
+
+   <!-- 监听器 -->
+ 	<listener>
+		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+	</listener>
+	<context-param>
+		<param-name>contextConfigLocation</param-name>
+		<param-value>classpath*:spring_*.xml</param-value>
+	</context-param>
+          
+   
+	<!-- SpringMVC编码格式处理UTF-8 -->
+	<filter>
+		<filter-name>characterEncodingFilter</filter-name>
+		<filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
+		<init-param>
+			<param-name>encoding</param-name>
+			<param-value>UTF-8</param-value>
+		</init-param>
+		<init-param>
+			<param-name>forceEncoding</param-name>
+			<param-value>true</param-value>
+		</init-param>
+	</filter>
+	<filter-mapping>
+		<filter-name>characterEncodingFilter</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping>
+
+
+  
+  
+	<!-- SpringMVC Servlet DispatcherServlet -->
+	<servlet>
+		<servlet-name>dispatcherServlet</servlet-name>
+		<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+		<!-- 默认情况下，DispatcherServlet 会 /WEB-INF/Servet名称-servlet.xml [/WEB-INF/dispatcherServlet-servlet.xml] 
+			自定义配置文件目录位置：contextConfigLocation -->
+		<init-param>
+			<param-name>contextConfigLocation</param-name>
+			<param-value>classpath:spring_mvc.xml</param-value>
+		</init-param>
+		<!-- <load-on-startup>1</load-on-startup> -->
+	</servlet>
+	<servlet-mapping>
+	<!-- 
+			/:拦载所有的请求（.jsp除外）     a.jpg
+			/*:拦截所有的请求（包括JSP）
+	 -->
+		<servlet-name>dispatcherServlet</servlet-name>
+		<url-pattern>/</url-pattern>
+	</servlet-mapping>
+
+   <!-- REST风格  过滤器
+     	浏览器：GET / POST  / HEAD
+      REST风格开发需要 DELETE / PUT请求   需要：HiddenHttpMethodFilter
+    -->
+    <filter>
+    	<filter-name>httpMethodFilter</filter-name>
+    	<filter-class>org.springframework.web.filter.HiddenHttpMethodFilter</filter-class>
+    </filter>
+    <filter-mapping>
+		<filter-name>httpMethodFilter</filter-name>
+		<url-pattern>/*</url-pattern>    
+	</filter-mapping>
+    
+    
+  
+   
+    
+  
+    
+    <!-- druid 监控 -->
+	<servlet>
+		<servlet-name>DruidStatView</servlet-name>
+		<servlet-class>com.alibaba.druid.support.http.StatViewServlet</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>DruidStatView</servlet-name>
+		<url-pattern>/druid/*</url-pattern>
+	</servlet-mapping>
+    
+  
+
+</web-app>

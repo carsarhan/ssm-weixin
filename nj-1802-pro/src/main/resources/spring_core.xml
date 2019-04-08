@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:jpa="http://www.springframework.org/schema/data/jpa"
+	xmlns:task="http://www.springframework.org/schema/task"
+	xmlns:redis="http://www.springframework.org/schema/redis"
+	xsi:schemaLocation="http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd
+		http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-4.3.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
+		http://www.springframework.org/schema/data/jpa http://www.springframework.org/schema/data/jpa/spring-jpa.xsd
+		http://www.springframework.org/schema/redis http://www.springframework.org/schema/redis/spring-redis-1.0.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
+         
+	 
+
+	
+	<!-- Spring IOC容器 扫描 base-package   url-pattren=**/*.class
+  	 注解：@Repository @Service @Controller  @Compont
+  	 com.qfjy.project.weixin.servlet
+  	 
+  	 作用：SpringIOC容器扫描 创建对象。
+  	 约定大于配置。
+  	 
+  -->
+	<context:component-scan   base-package="com.qfjy"   
+		use-default-filters="true">
+		<!-- exclude-filter是针对include-filter里的内容进行排除 -->
+		<context:exclude-filter type="annotation"
+			expression="org.springframework.stereotype.Controller" />
+	</context:component-scan>
+ 	<!-- AOP配置    -->
+	<aop:aspectj-autoproxy></aop:aspectj-autoproxy>  
+
+	
+	<context:property-placeholder location="classpath:jdbc.properties" />
+
+
+	
+	<bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource" 
+		init-method="init" destroy-method="close">
+		<property name="driverClassName" value="${jdbc_driver}" />
+		<property name="url" value="${jdbc_url}" />
+		<property name="username" value="${jdbc_user}" />
+		<property name="password" value="${jdbc_password}" />
+		<!-- 配置初始化大小、最小、最大 -->
+		<property name="initialSize" value="1" />
+		<property name="minIdle" value="1" />
+		<property name="maxActive" value="10" />
+
+		<!-- 配置获取连接等待超时的时间 -->
+		<property name="maxWait" value="10000" />
+
+		<!-- 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒 -->
+		<property name="timeBetweenEvictionRunsMillis" value="60000" />
+
+		<!-- 配置一个连接在池中最小生存的时间，单位是毫秒 -->
+		<property name="minEvictableIdleTimeMillis" value="300000" />
+
+		<property name="testWhileIdle" value="true" />
+
+		<!-- 这里建议配置为TRUE，防止取到的连接不可用 -->
+		<property name="testOnBorrow" value="true" />
+		<property name="testOnReturn" value="false" />
+
+		<!-- 打开PSCache，并且指定每个连接上PSCache的大小 -->
+		<property name="poolPreparedStatements" value="true" />
+		<property name="maxPoolPreparedStatementPerConnectionSize"
+			value="20" />
+		<!-- 这里配置提交方式，默认就是TRUE，可以不用配置 -->
+		<property name="defaultAutoCommit" value="true" />
+		<!-- 验证连接有效与否的SQL，不同的数据配置不同 -->
+		<property name="validationQuery" value="select 1 " />
+
+		<!-- 配置监控统计拦截的filters -->
+		<property name="filters" value="stat" />
+
+	</bean>
+
+
+	<!--2 Spring JDBC模版 -->
+	<bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+		<property name="dataSource" ref="dataSource"></property>
+	</bean>
+
+	<!--Spring 整合MyBatis -->
+	<!-- 一、在MyBatis 中，使用 SqlSessionFactoryBuilder创建SqlSessionFactory ，进而来创建 
+		SqlSession。 得到 session 之后,你可以使用它来执行映射语句,提交或回滚连接,最后,当不再需要它的时候, 你可以关闭 session。 
+		二、Mybatis社区自己开发了一个Mybatis-spring用来满足Mybatis用户整合Spring的需求。 使用 MyBatis-Spring 
+		之后, 会使用SqlSessionFactoryBean来代替SqlSessionFactoryBuilder创建SqlSessionFactory， 
+		然后可以使用使用sqlSession。 三、Mybatis-Spring提供了一种直接使用SqlSession的方式（一个实现了SqlSession接口的SqlSessionTemplate实现类） 
+		它是线程安全的，可以被多个Dao同时使用； 四、它跟Spring的事务进行了关联，确保当前被使用的SqlSession是一个已经和Spring的事务进行绑定了的，而且它还可以自己管理Session的提交和关闭。 -->
+
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource"></property>
+		<!-- 加载相应的mybatis配置文件
+		<property name="configLocation" value="classpath:sqlMapConfig.xml"></property>
+		 -->
+		<!-- 指定包的路径，在该内下的所有JAVA类，都会为其定义别名 别名：类名 -->
+		<property name="typeAliasesPackage" value="com.qfjy.project.meeting.bean"></property>
+		<!-- -->
+		<property name="mapperLocations" value="classpath:mapper/*.xml"></property>
+	</bean>
+	<bean id="sqlSession" class="org.mybatis.spring.SqlSessionTemplate">
+		<constructor-arg index="0" ref="sqlSessionFactory"></constructor-arg>
+	</bean>
+	<!-- 自动扫描，将Mapper代理对象自动注入到Spring dao中 -->
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="basePackage" value="com.qfjy.mapper"></property>
+		<property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"></property>
+	</bean>
+
+
+
+	<!-- 配置事 务管理 -->
+	<!-- 对数据源 DataSource 事务管理器配置 -->
+	<bean id="transactionManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource"></property>
+	</bean>
+	<!--
+	Spring事务：配置文件方式事务 <aop>
+		
+	     开启声明式注解事务 驱动 -->
+	<tx:annotation-driven transaction-manager="transactionManager" />
+
+
+
+</beans>
